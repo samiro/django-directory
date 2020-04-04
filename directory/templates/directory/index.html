@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="w-mod-js w-mod-no-touch w-mod-video w-mod-no-ios wf-roboto-n3-active wf-roboto-n4-active wf-roboto-n5-active wf-robotocondensed-n3-active wf-robotocondensed-n4-active wf-robotocondensed-n7-active wf-robotoslab-n3-active wf-robotoslab-n4-active wf-robotoslab-n7-active wf-arbutusslab-n4-active wf-active">
+<head>
+    <meta charset="utf-8">
+    <title>{{ city.title }}</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link rel="shortcut icon" href="{% static "core/img/favicon.ico" %}" type="image/x-icon">
+    <link rel="icon" href="{% static "core/img/favicon.ico" %}" type="image/x-icon">
+
+    <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+    <style>
+        .Box-header h2{
+            font-weight: 700 !important;
+            color: #888;
+        }
+        .Box-row{
+            font-size: 16px;
+        }
+        .col-name{
+            width: 22%;
+        }
+        .col-address{
+            width: 22%;
+        }
+        .col-address p,
+        .col-name p{
+            margin: 0;
+        }
+        .col-has_takeout{
+            width: 110px;
+            text-align: center;
+        }
+        .col-has_takeout .h5,
+        .col-has_delivery .h5{
+            font-size: 16px !important;
+        }
+        .col-has_delivery{
+            width: 110px;
+            text-align: center;
+        }
+        #table{
+            overflow: auto;
+        }
+        #table > div{
+            padding-left: 16px;
+            padding-right: 16px;
+            min-width: 1000px;
+        }
+        #table > div > div{
+        }
+        .col-btns .btn-whatsapp{
+            padding: 3px 5px;
+        }
+        .col-btns img{
+            height: 20px;
+            display: block;
+        }
+        @media only screen and (max-width: 500px) {
+            #header .Subhead{
+                text-align: center;
+            }
+            #header .Subhead-actions{
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header" class="container-xl clearfix p-3">
+        <div class="Subhead">
+            <div class="Subhead-description">Negocios en la cuarentena 💪</div>
+            <div class="Subhead-heading">👋 <strong>Bienvenido {{ city.demonym|title }}</strong></div>
+            <div class="Subhead-actions">
+                <a class="btn btn-sm btn-primary" target="_blank" href="{{ city.form }}">
+                    Agregue su negocio a la lista
+                </a>
+            </div>
+        </div>
+        <p>
+            Tras las medidas por el COVID-19, muchos negocios de {{ city.title }} están ahora ofreciendo sus productos 
+            a través de recogida y/o domicilio durante las próximas semanas. Para ayudarnos entre todos,
+            hemos creado este directorio de negocios locales.
+        </p>
+        <div class="filters clearfix">
+            <div class="d-flex flex-row">
+                <div>
+                    <details class="details-reset details-overlay">
+                        <summary class="btn">
+                          {% if category %}{{ category.title }}{% else %}Todos los negocios{% endif %} <div class="dropdown-caret"></div>
+                        </summary>
+                        <div class="SelectMenu">
+                          <div class="SelectMenu-modal">
+                            <header class="SelectMenu-header">
+                              <h3 class="SelectMenu-title">Filtrar por tipo de negocio</h3>
+                            </header>
+                            <div class="SelectMenu-list">
+                                <a class="SelectMenu-item d-flex flex-justify-between" href="?" aria-checked="true" role="menuitem">
+                                    <div class="d-block">
+                                        <h5>
+                                            Todos
+                                        </h5>
+                                    </div>
+                                    {% if not category %}
+                                    <svg class="SelectMenu-icon SelectMenu-icon--check octicon octicon-check" width="12" height="16" viewBox="0 0 12 16" aria-hidden="true" ><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5L12 5z" /></svg>
+                                    {% endif %}
+                                </a>
+                                {% for c in category_list %}
+                                <a class="SelectMenu-item d-flex flex-justify-between" href="?c={{ c.pk }}" aria-checked="{% if category.pk == c.pk %}true{% else %}false{% endif%}" role="menuitem">
+                                    <div class="d-block">
+                                        <h5>
+                                            {{ c.title }}
+                                        </h5>
+                                        <span>{{ c.description }}</span>
+                                    </div>
+                                    <svg class="SelectMenu-icon SelectMenu-icon--check octicon octicon-check" width="12" height="16" viewBox="0 0 12 16" aria-hidden="true" ><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5L12 5z" /></svg>
+                                </a>
+                                {% endfor %}
+                            </div>
+                          </div>
+                        </div>
+                      </details>
+                </div>
+                <div class="flex-1 ml-2">
+                    <select class="form-select" onchange="neighborhood_filter(this.value)">
+                        <option value="" {% if not neighborhood %}selected{% endif %}>Todos los barrios</option>
+                        {% for n in city.neighborhood_set.all %}
+                        <option value="{{ n.id }}" {% if neighborhood.id == n.id %}selected{% endif %}>👉 {{ n.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xl clearfix">
+        <div id="table">
+            <div>
+                <div class="Box Box--condensed box-shadow my-3">
+                    <div class="Box-header">
+                        <div class="d-flex flex-row flex-items-center">
+                            <div class="px-1 col-name">
+                                <h2 class="h5">NOMBRE</h2>
+                            </div>
+                            <div class="px-1 col-address">
+                                <h2 class="h5">DIRECCIÓN</h2>
+                            </div>
+                            <div class="px-1 col-has_takeout">
+                                <h2 class="h6">PEDIR PARA RECOGER</h2>
+                            </div>
+                            <div class="px-1 col-has_delivery">
+                                <h2 class="h6">ENTREGA A DOMICILIO</h2>
+                            </div>
+                            <div class="px-2 flex-1">
+                                <h2 class="h5">OPCIONES</h2>
+                            </div>
+                        </div>
+                    </div>
+                    {% for business in business_list %}
+                    <div class="Box-row">
+                        <div class="d-flex flex-row flex-items-center">
+                            <div class="px-1 col-name">
+                                <p class="text-small">{{ business.category.title }}</p>
+                                <h2 class="h4">{{ business.title }}</h2>
+                            </div>
+                            <div class="px-1 col-address">
+                                <p class="text-small">{{ business.schedule }}</p>
+                                <h2 class="h5">{{ business.neighborhood.title }}{% if business.address %}, {{ business.address }}{% endif %}</h2>
+                            </div>
+                            <div class="px-1 col-has_takeout">
+                                <h2 class="h5">
+                                    {% if business.has_takeout %}👍 Si{% else %}⛔ No{% endif %}</h2>
+                            </div>
+                            <div class="px-1 col-has_delivery">
+                                <h2 class="h5">{% if business.has_delivery %}👍 Si{% else %}⛔ No{% endif %}</h2>
+                            </div>
+                            <div class="px-2 flex-1 col-btns">
+                                {% if business.whatsapp %}
+                                <a class="btn btn-sm btn-whatsapp" target="_blank" href="https://api.whatsapp.com/send?phone=+57{{ business.whatsapp }}">
+                                <img src="https://gerente.co/static/core/svg/whatsapp.svg">
+                                </a>
+                                {% endif %}
+                                {% with business.get_phones as phones %}
+                                    {% if phones|length > 1 %}
+                                    <details class="dropdown details-reset details-overlay d-inline-block">
+                                        <summary class="btn btn-sm" aria-haspopup="true">
+                                            {{ phones.0 }}
+                                            <div class="dropdown-caret"></div>
+                                        </summary>
+                                        <ul class="dropdown-menu dropdown-menu-sw">
+                                            {% for phone in phones %}
+                                            <li><a class="dropdown-item" target="_blank" href="tel: {{ phone }}">{{ phone }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </details>
+                                    {% elif phones|length == 1 %}
+                                    <a class="btn btn-sm" target="_blank" href="tel: {{ phones.0 }}">{{ phones.0 }}</a>
+                                    {% endif %}
+                                {% endwith %}
+        
+                                {% if business.link %}
+                                <a class="btn btn-sm btn-outline" target="_blank" href="{{ business.link }}">Sitio web</a>
+                                {% endif %}
+                                
+                                {% if business.delivery %}
+                                    {% with business.get_delivery as deliveries %}
+                                        {% if deliveries|length > 0%}
+                                        <details class="dropdown details-reset details-overlay d-inline-block">
+                                            <summary class="btn btn-sm" aria-haspopup="true">
+                                                App Domicilio
+                                                <div class="dropdown-caret"></div>
+                                            </summary>
+                                            <ul class="dropdown-menu dropdown-menu-sw">
+                                                {% for d in deliveries %}
+                                                <li><a class="dropdown-item" target="_blank" href="{{ d.1 }}">{{d.0}}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                        </details>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="blankslate">
+                        <svg width="28" height="32" viewBox="0 0 14 16" class="octicon octicon-tag blankslate-icon" aria-hidden="true">
+                            <path
+                            fill-rule="evenodd"
+                            d="M7.73 1.73C7.26 1.26 6.62 1 5.96 1H3.5C2.13 1 1 2.13 1 3.5v2.47c0 .66.27 1.3.73 1.77l6.06 6.06c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 0 0 0-1.41L7.73 1.73zM2.38 7.09c-.31-.3-.47-.7-.47-1.13V3.5c0-.88.72-1.59 1.59-1.59h2.47c.42 0 .83.16 1.13.47l6.14 6.13-4.73 4.73-6.13-6.15zM3.01 3h2v2H3V3h.01z"
+                            />
+                        </svg>
+                        <h3 class="mb-1">No hay negocios en esta búsqueda</h3>
+                        <p>Puede agregar su negocio a la lista</p>
+                        <a class="btn btn-outline my-3" target="_blank" href="{{ city.form }}">Llenar formulario</a>
+                        <p><a class="btn-link" href="?">Ver todos los negocios</a></p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xl clearfix p-3">
+        <div class="flash">
+            <p>Hemos creado esta lista a partir de información encontrada en internet y desde entonces la cuidadanía y propietarios de negocios la han estado completando. 
+            Esta información no es, ni puede ser usada con fines comerciales o de publicidad, sino que se dispone como una herramienta de consulta para ayudar a las personas a acceder a los productos básicos,
+            apoyando a los negocios locales, por supuesto, quedándose en casa.</p>
+        </div>
+
+        <div class="clearfix">
+            <div class="col-sm-6 col-md-4 float-left p-2">
+                <div class="d-block box-shadow-medium px-3 pt-4 pb-6 position-relative rounded-1 overflow-hidden">
+                    <div class="bg-yellow position-absolute top-0 left-0 py-1 width-full"></div>
+                    <h3 class="text-gray-dark">✍️ Agregue su negocio</h3>
+                    <p class="text-gray">
+                        Puede agregar su negocio a este directorio, sin ningún costo ni intermediario, a través 
+                        del siguiente link:
+                    </p>
+                    <ul class="position-absolute bottom-0 pb-3 text-small text-gray list-style-none ">
+                        <li class="d-inline-block mr-1">
+                        👉 <a target="_blank" href="{{ city.form }}">
+                            Formulario nuevos negocios
+                        </a>
+                        </li>
+                    </ul>
+                </div>
+                </div>
+    
+            <div class="col-sm-6 col-md-4 float-left p-2">
+                <div class="d-block box-shadow-medium px-3 pt-4 pb-6 position-relative rounded-1 overflow-hidden">
+                    <div class="bg-blue position-absolute top-0 left-0 py-1 width-full"></div>
+                    <h3 class="text-gray-dark">❓ Sobre COVID-19</h3>
+                    <p class="text-gray">
+                        Empleados y usuarios de los establecimientos del sector de productos farmacéuticos, alimentos 
+                        y bebidas deben adoptar acciones por COVID-19.
+                    </p>
+                    <ul class="position-absolute bottom-0 pb-3 text-small text-gray list-style-none ">
+                      <li class="d-inline-block mr-1">
+                        👉 <a target="_blank" href="https://www.minsalud.gov.co/Paginas/Establecimientos-de-alimentos-bebidas-y-medicamentos-con-lineamientos-por-COVID-19.aspx">Lineamientos MinSalud</a>
+                      </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="col-sm-6 col-md-4 float-left p-2">
+            <div class="d-block box-shadow-medium px-3 pt-4 pb-6 position-relative rounded-1 overflow-hidden">
+                <div class="bg-red position-absolute top-0 left-0 py-1 width-full"></div>
+                <h3 class="text-gray-dark">❤ Formas de ayudar?</h3>
+                <p class="text-gray">
+                    <a target="_blank" href="https://coronaviruscolombia.gov.co/Covid19/ayudar-nos-hace-bien.html">#AyudarNosHaceBien</a> 
+                    Unidos Somos Más Fuertes. Una iniciativa del gobierno Colombiano para canalizar la solidaridad del 
+                    pueblo colombiano.
+                </p>
+                <ul class="position-absolute bottom-0 pb-3 text-small text-gray list-style-none ">
+                    <li class="d-inline-block mr-1">
+                        👉 <a target="_blank" href="https://coronaviruscolombia.gov.co/Covid19/ayudar-nos-hace-bien.html">coronaviruscolombia.gov.co</a>
+                      </li>
+                </ul>
+            </div>
+            </div>
+        </div>
+        <div class="text-center p-3">
+            <div>
+                Escríbenos a <a href="mailto:hola@gerente.co" target="_blank">hola@gerente.co</a>
+            </div>
+            <div>
+                Hecho con 💚 en Manizales por <a href="https://gerente.co" target="_blank">gerente.co</a>. Gracias <a href="https://lfk.im" target="_blank">LFK.im</a> por la inspiración.
+            </div>
+        </div>
+    </div>
+    <script>
+        var category_id = '{{ category.id }}';
+        function neighborhood_filter(id){
+            var url = '?';
+            if(category_id){
+                url = '?c=' + category_id + '&'
+            }
+            url += 'n=' + id;
+            window.location.href = url;
+        }
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-62234977-2"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-62234977-2');
+    </script>
+</body>
+</html>
